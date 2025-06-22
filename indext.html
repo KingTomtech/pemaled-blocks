@@ -1,0 +1,2146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zinggati Blocks Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --success-color: #2ecc71;
+        --warning-color: #f39c12;
+        --danger-color: #e74c3c;
+        --info-color: #3498db;
+      }
+
+      .custom-header-footer {
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        height: 80px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .card-custom {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        background: white;
+        overflow: hidden;
+      }
+
+      .card-custom:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .card-custom::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--secondary-color);
+      }
+
+      .nav-icon {
+        color: #b3cde0;
+        font-size: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        padding: 8px 12px;
+        border-radius: 10px;
+      }
+
+      .nav-icon:hover {
+        color: var(--secondary-color);
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .active-nav {
+        color: var(--secondary-color) !important;
+        transform: scale(1.1);
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .production-data {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+      }
+
+      .chart-container {
+        height: 30vh;
+        margin: 20px 0;
+      }
+
+      .status-badge {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+      }
+
+      .main-content {
+        margin-top: 100px;
+        margin-bottom: 100px;
+      }
+
+      .text-white {
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+      }
+
+      .progress-thin {
+        height: 5px;
+      }
+
+      .material-quantity {
+        font-size: 1.3rem;
+        font-weight: 600;
+      }
+
+      .order-count {
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+
+      .financial-amount {
+        font-size: 1.3rem;
+        font-weight: 700;
+      }
+
+      .profile-icon {
+        width: 40px;
+        height: 40px;
+        transition: all 0.3s ease;
+      }
+
+      .profile-icon:hover {
+        transform: scale(1.1);
+      }
+
+      .offcanvas-start {
+        width: 280px;
+      }
+
+      .offcanvas-body ul li {
+        margin-bottom: 10px;
+      }
+
+      .offcanvas-body ul li a {
+        padding: 10px 15px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        display: block;
+      }
+
+      .offcanvas-body ul li a:hover {
+        background: rgba(52, 152, 219, 0.1);
+        color: var(--secondary-color);
+      }
+
+      .modal-content {
+        border-radius: 15px;
+        overflow: hidden;
+      }
+
+      .modal-header {
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        color: white;
+      }
+
+      .btn-close {
+        filter: invert(1);
+      }
+
+      .animate-bounce {
+        animation: bounce 2s infinite;
+      }
+
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      .pulse {
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .badge-notification {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--danger-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+      }
+
+      .dropdown-menu {
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        border: none;
+      }
+
+      .dropdown-item {
+        padding: 10px 15px;
+        transition: all 0.2s ease;
+      }
+
+      .dropdown-item:hover {
+        background: rgba(52, 152, 219, 0.1);
+      }
+
+      .dropdown-divider {
+        margin: 5px 0;
+      }
+
+      .form-control,
+      .form-select {
+        border-radius: 10px;
+        padding: 10px 15px;
+        border: 1px solid #e0e0e0;
+      }
+
+      .form-control:focus,
+      .form-select:focus {
+        border-color: var(--secondary-color);
+        box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+      }
+
+      .btn {
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary {
+        background: var(--secondary-color);
+        border-color: var(--secondary-color);
+      }
+
+      .btn-primary:hover {
+        background: #2980b9;
+        border-color: #2980b9;
+        transform: translateY(-2px);
+      }
+
+      .btn-info {
+        background: var(--info-color);
+        border-color: var(--info-color);
+      }
+
+      .btn-info:hover {
+        background: #2980b9;
+        border-color: #2980b9;
+        transform: translateY(-2px);
+      }
+
+      .alert {
+        border-radius: 10px;
+      }
+
+      .card-title {
+        position: relative;
+        padding-bottom: 10px;
+      }
+
+      .card-title::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 50px;
+        height: 3px;
+        background: var(--secondary-color);
+      }
+
+      .bg-light {
+        background-color: #f8f9fa !important;
+      }
+
+      .bg-gradient-primary {
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+      }
+
+      .text-primary {
+        color: var(--secondary-color) !important;
+      }
+
+      .text-success {
+        color: var(--success-color) !important;
+      }
+
+      .text-warning {
+        color: var(--warning-color) !important;
+      }
+
+      .text-danger {
+        color: var(--danger-color) !important;
+      }
+
+      .text-info {
+        color: var(--info-color) !important;
+      }
+
+      .bg-success {
+        background-color: var(--success-color) !important;
+      }
+
+      .bg-warning {
+        background-color: var(--warning-color) !important;
+      }
+
+      .bg-danger {
+        background-color: var(--danger-color) !important;
+      }
+
+      .bg-info {
+        background-color: var(--info-color) !important;
+      }
+
+      .badge {
+        font-weight: 500;
+        padding: 5px 10px;
+      }
+
+      .tooltip-inner {
+        border-radius: 8px;
+        padding: 5px 10px;
+      }
+
+      .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1100;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .toast-header {
+        border-radius: 10px 10px 0 0;
+      }
+
+      .animate__animated {
+        animation-duration: 0.5s;
+      }
+
+      .floating-btn {
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--secondary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        z-index: 100;
+        transition: all 0.3s ease;
+      }
+
+      .floating-btn:hover {
+        transform: scale(1.1) translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <!-- Header -->
+    <header
+      class="custom-header-footer fixed-top animate__animated animate__fadeInDown"
+    >
+      <div class="container h-100">
+        <div class="d-flex justify-content-between align-items-center h-100">
+          <div class="d-flex align-items-center gap-3">
+            <button
+              class="btn text-white"
+              type="button"
+              data-bs-toggle="offcanvas"
+              data-bs-target="#sidebarMenu"
+              aria-controls="sidebarMenu"
+              aria-label="Open menu"
+            >
+              <i class="fas fa-bars"></i>
+            </button>
+            <div class="d-flex align-items-baseline">
+              <h2 class="text-white mb-0 fw-bold">Zinggati</h2>
+              <span class="text-white ms-2" style="font-size: 0.8rem"
+                >Blocks</span
+              >
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="dropdown position-relative">
+              <button
+                class="btn text-white position-relative"
+                type="button"
+                id="notificationDropdown"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                aria-label="Notifications"
+              >
+                <i class="fas fa-bell"></i>
+                <span class="badge-notification">3</span>
+              </button>
+              <ul
+                class="dropdown-menu dropdown-menu-end"
+                aria-labelledby="notificationDropdown"
+              >
+                <li>
+                  <h6 class="dropdown-header">Notifications (3)</h6>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="#">
+                    <div class="d-flex align-items-center">
+                      <div class="me-3">
+                        <i class="fas fa-truck text-success"></i>
+                      </div>
+                      <div>
+                        <div>New delivery scheduled</div>
+                        <small class="text-muted">10 mins ago</small>
+                      </div>
+                    </div>
+                  </a>
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <a class="dropdown-item" href="#">
+                    <div class="d-flex align-items-center">
+                      <div class="me-3">
+                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                      </div>
+                      <div>
+                        <div>Inventory low: Cement</div>
+                        <small class="text-muted">2 hours ago</small>
+                      </div>
+                    </div>
+                  </a>
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <a class="dropdown-item" href="#">
+                    <div class="d-flex align-items-center">
+                      <div class="me-3">
+                        <i class="fas fa-check-circle text-success"></i>
+                      </div>
+                      <div>
+                        <div>Production target met</div>
+                        <small class="text-muted">Yesterday</small>
+                      </div>
+                    </div>
+                  </a>
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <a class="dropdown-item text-center text-primary" href="#"
+                    >View all notifications</a
+                  >
+                </li>
+              </ul>
+            </div>
+            <button
+              class="profile-icon rounded-circle d-flex align-items-center justify-content-center bg-white pulse"
+              data-bs-toggle="modal"
+              data-bs-target="#profileModal"
+              aria-label="Profile"
+              title="Profile Settings"
+            >
+              <i class="fas fa-user-cog text-primary"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Offcanvas Sidebar -->
+    <aside
+      class="offcanvas offcanvas-start shadow-lg"
+      tabindex="-1"
+      id="sidebarMenu"
+      aria-labelledby="sidebarMenuLabel"
+    >
+      <div class="offcanvas-header bg-gradient-primary text-white">
+        <div class="d-flex align-items-center">
+          <div class="me-3">
+            <i class="fas fa-industry fa-2x"></i>
+          </div>
+          <div>
+            <h5 class="offcanvas-title mb-0" id="sidebarMenuLabel">
+              Zinggati Blocks
+            </h5>
+            <small>Production Dashboard</small>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="btn-close text-reset"
+          data-bs-dismiss="offcanvas"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="offcanvas-body p-0">
+        <ul class="list-unstyled mb-0">
+          <li>
+            <a
+              href="#"
+              class="text-decoration-none d-flex align-items-center px-4 py-3 active-nav-item"
+              data-section="home"
+            >
+              <i class="fas fa-home me-3 text-primary"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="text-decoration-none d-flex align-items-center px-4 py-3"
+              data-section="orders"
+            >
+              <i class="fas fa-clipboard-list me-3 text-success"></i>
+              <span>Orders</span>
+              <span class="badge bg-success ms-auto">12</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="text-decoration-none d-flex align-items-center px-4 py-3"
+              data-section="stock"
+            >
+              <i class="fas fa-warehouse me-3 text-warning"></i>
+              <span>Stock</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="text-decoration-none d-flex align-items-center px-4 py-3"
+              data-section="reports"
+            >
+              <i class="fas fa-chart-pie me-3 text-info"></i>
+              <span>Reports</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="text-decoration-none d-flex align-items-center px-4 py-3"
+              data-section="machinery"
+            >
+              <i class="fas fa-cogs me-3 text-danger"></i>
+              <span>Machinery</span>
+            </a>
+          </li>
+          <li>
+            <a
+              href="#"
+              class="text-decoration-none d-flex align-items-center px-4 py-3"
+              data-section="employees"
+            >
+              <i class="fas fa-users me-3 text-secondary"></i>
+              <span>Employees</span>
+            </a>
+          </li>
+        </ul>
+        <div class="px-4 py-3 border-top">
+          <div class="d-flex align-items-center">
+            <div class="me-3">
+              <i class="fas fa-cog text-muted"></i>
+            </div>
+            <div>
+              <a href="#" class="text-decoration-none text-muted">Settings</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Profile Modal -->
+    <div
+      class="modal fade"
+      id="profileModal"
+      tabindex="-1"
+      aria-labelledby="profileModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-gradient-primary text-white">
+            <h5 class="modal-title" id="profileModalLabel">Profile Settings</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="text-center mb-4">
+              <div class="position-relative d-inline-block">
+                <img
+                  src="https://ui-avatars.com/api/?name=Admin+User&background=3498db&color=fff&size=100"
+                  class="rounded-circle border border-3 border-primary"
+                  alt="Profile"
+                  width="100"
+                />
+                <button
+                  class="btn btn-sm btn-primary rounded-circle position-absolute bottom-0 end-0"
+                >
+                  <i class="fas fa-camera"></i>
+                </button>
+              </div>
+              <h5 class="mt-3 mb-0">Admin User</h5>
+              <small class="text-muted">Production Manager</small>
+            </div>
+
+            <form>
+              <div class="mb-3">
+                <label class="form-label">Personal Information</label>
+                <div class="mb-3">
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Full Name"
+                    value="Admin User"
+                  />
+                </div>
+                <div class="mb-3">
+                  <input
+                    type="email"
+                    class="form-control"
+                    placeholder="Email"
+                    value="admin@zinggatiblocks.com"
+                  />
+                </div>
+                <div class="mb-3">
+                  <input
+                    type="tel"
+                    class="form-control"
+                    placeholder="Phone"
+                    value="+260 123 456 789"
+                  />
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Dashboard Customization</label>
+                <div class="form-check form-switch mb-2">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="showProduction"
+                    checked
+                  />
+                  <label class="form-check-label" for="showProduction"
+                    >Show Production Card</label
+                  >
+                </div>
+                <div class="form-check form-switch mb-2">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="showOrders"
+                    checked
+                  />
+                  <label class="form-check-label" for="showOrders"
+                    >Show Orders Card</label
+                  >
+                </div>
+                <div class="form-check form-switch mb-2">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="showFinancials"
+                    checked
+                  />
+                  <label class="form-check-label" for="showFinancials"
+                    >Show Financials Card</label
+                  >
+                </div>
+                <div class="form-check form-switch mb-2">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="showInventory"
+                    checked
+                  />
+                  <label class="form-check-label" for="showInventory"
+                    >Show Inventory Card</label
+                  >
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="chartTimeframe" class="form-label"
+                  >Chart Timeframe</label
+                >
+                <select class="form-select" id="chartTimeframe">
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly" selected>Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="themeColor" class="form-label">Theme Color</label>
+                <div class="d-flex gap-2">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      name="themeColor"
+                      id="themeBlue"
+                      checked
+                    />
+                    <label class="form-check-label" for="themeBlue">
+                      <span
+                        class="d-inline-block rounded-circle bg-primary"
+                        style="width: 20px; height: 20px"
+                      ></span>
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      name="themeColor"
+                      id="themeGreen"
+                    />
+                    <label class="form-check-label" for="themeGreen">
+                      <span
+                        class="d-inline-block rounded-circle bg-success"
+                        style="width: 20px; height: 20px"
+                      ></span>
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      name="themeColor"
+                      id="themePurple"
+                    />
+                    <label class="form-check-label" for="themePurple">
+                      <span
+                        class="d-inline-block rounded-circle"
+                        style="width: 20px; height: 20px; background: #9b59b6"
+                      ></span>
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      name="themeColor"
+                      id="themeOrange"
+                    />
+                    <label class="form-check-label" for="themeOrange">
+                      <span
+                        class="d-inline-block rounded-circle bg-warning"
+                        style="width: 20px; height: 20px"
+                      ></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button type="button" class="btn btn-primary" id="saveSettings">
+              Save changes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Production Modal -->
+    <div
+      class="modal fade"
+      id="productionModal"
+      tabindex="-1"
+      aria-labelledby="productionModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-gradient-primary text-white">
+            <h5 class="modal-title" id="productionModalLabel">
+              Update Production
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="productionForm">
+              <div class="mb-3">
+                <label for="blocks6" class="form-label">6" Blocks</label>
+                <div class="input-group">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="blocks6"
+                    min="0"
+                    placeholder="Enter quantity"
+                  />
+                  <span class="input-group-text">Units</span>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="blocks4" class="form-label">4" Blocks</label>
+                <div class="input-group">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="blocks4"
+                    min="0"
+                    placeholder="Enter quantity"
+                  />
+                  <span class="input-group-text">Units</span>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="productionShift" class="form-label"
+                  >Production Shift</label
+                >
+                <select class="form-select" id="productionShift">
+                  <option value="morning">Morning Shift (6AM - 2PM)</option>
+                  <option value="afternoon">
+                    Afternoon Shift (2PM - 10PM)
+                  </option>
+                  <option value="night">Night Shift (10PM - 6AM)</option>
+                </select>
+              </div>
+              <div
+                id="productionError"
+                class="alert alert-danger"
+                style="display: none"
+              >
+                <i class="fas fa-exclamation-circle me-2"></i>Please enter valid
+                quantities.
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button type="button" class="btn btn-primary" id="saveProduction">
+              <i class="fas fa-save me-2"></i>Save changes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inventory Modal -->
+    <div
+      class="modal fade"
+      id="inventoryModal"
+      tabindex="-1"
+      aria-labelledby="inventoryModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-gradient-primary text-white">
+            <h5 class="modal-title" id="inventoryModalLabel">
+              Manage Inventory
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="inventoryForm">
+              <div class="mb-3">
+                <label for="cement" class="form-label">Cement</label>
+                <div class="input-group">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="cement"
+                    min="0"
+                    placeholder="Enter quantity"
+                  />
+                  <span class="input-group-text">Bags</span>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="stone" class="form-label">Stone</label>
+                <div class="input-group">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="stone"
+                    min="0"
+                    placeholder="Enter quantity"
+                  />
+                  <span class="input-group-text">Tons</span>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="diesel" class="form-label">Diesel</label>
+                <div class="input-group">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="diesel"
+                    min="0"
+                    placeholder="Enter quantity"
+                  />
+                  <span class="input-group-text">Litres</span>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="sand" class="form-label">Sand</label>
+                <div class="input-group">
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="sand"
+                    min="0"
+                    placeholder="Enter quantity"
+                  />
+                  <span class="input-group-text">Tons</span>
+                </div>
+              </div>
+              <div
+                id="inventoryError"
+                class="alert alert-danger"
+                style="display: none"
+              >
+                <i class="fas fa-exclamation-circle me-2"></i>Please enter valid
+                quantities.
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+            <button type="button" class="btn btn-primary" id="saveInventory">
+              <i class="fas fa-save me-2"></i>Save changes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button
+      class="floating-btn animate__animated animate__bounceInUp"
+      id="quickActionBtn"
+      title="Quick Actions"
+    >
+      <i class="fas fa-bolt"></i>
+    </button>
+
+    <!-- Quick Actions Menu -->
+    <div class="toast" id="quickActionsMenu" style="display: none">
+      <div class="toast-header bg-primary text-white">
+        <strong class="me-auto">Quick Actions</strong>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="toast"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="toast-body">
+        <div class="d-grid gap-2">
+          <button
+            class="btn btn-sm btn-success mb-2"
+            data-bs-toggle="modal"
+            data-bs-target="#productionModal"
+          >
+            <i class="fas fa-industry me-2"></i>Record Production
+          </button>
+          <button
+            class="btn btn-sm btn-warning mb-2"
+            data-bs-toggle="modal"
+            data-bs-target="#inventoryModal"
+          >
+            <i class="fas fa-boxes me-2"></i>Update Inventory
+          </button>
+          <button class="btn btn-sm btn-info mb-2">
+            <i class="fas fa-file-invoice me-2"></i>Create Invoice
+          </button>
+          <button class="btn btn-sm btn-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>Report Issue
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="container main-content animate__animated animate__fadeIn">
+      <!-- Stats Overview -->
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <div class="card card-custom h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-muted mb-2">Daily Production</h6>
+                  <h3 class="mb-0">2,220</h3>
+                </div>
+                <div class="bg-primary bg-opacity-10 p-3 rounded">
+                  <i class="fas fa-industry text-primary fs-4"></i>
+                </div>
+              </div>
+              <div class="mt-3">
+                <span class="badge bg-success">
+                  <i class="fas fa-arrow-up me-1"></i>12.5%
+                </span>
+                <span class="text-muted ms-2">vs yesterday</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card card-custom h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-muted mb-2">Monthly Revenue</h6>
+                  <h3 class="mb-0">ZMW 45,200</h3>
+                </div>
+                <div class="bg-success bg-opacity-10 p-3 rounded">
+                  <i class="fas fa-coins text-success fs-4"></i>
+                </div>
+              </div>
+              <div class="mt-3">
+                <span class="badge bg-success">
+                  <i class="fas fa-arrow-up me-1"></i>8.3%
+                </span>
+                <span class="text-muted ms-2">vs last month</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card card-custom h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-muted mb-2">Pending Orders</h6>
+                  <h3 class="mb-0">12</h3>
+                </div>
+                <div class="bg-warning bg-opacity-10 p-3 rounded">
+                  <i class="fas fa-clipboard-list text-warning fs-4"></i>
+                </div>
+              </div>
+              <div class="mt-3">
+                <span class="badge bg-danger">
+                  <i class="fas fa-arrow-up me-1"></i>3 new
+                </span>
+                <span class="text-muted ms-2">today</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card card-custom h-100">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="text-muted mb-2">Machine Status</h6>
+                  <h3 class="mb-0">3/4</h3>
+                </div>
+                <div class="bg-info bg-opacity-10 p-3 rounded">
+                  <i class="fas fa-cogs text-info fs-4"></i>
+                </div>
+              </div>
+              <div class="mt-3">
+                <span class="badge bg-success">Operational</span>
+                <span class="badge bg-danger ms-1">1 Down</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div id="production-card" class="section col-md-6">
+          <div class="card card-custom animate__animated animate__fadeInLeft">
+            <div class="card-body">
+              <div
+                class="d-flex justify-content-between align-items-center mb-3"
+              >
+                <h5 class="card-title fw-bold">Today's Production</h5>
+                <div class="position-relative">
+                  <i class="fas fa-industry text-primary fs-4"></i>
+                  <span
+                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  >
+                    2
+                    <span class="visually-hidden">unread messages</span>
+                  </span>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-6">
+                  <div class="p-3 bg-light rounded">
+                    <div class="text-muted">6" Blocks</div>
+                    <div class="production-data" id="blocks6-value">1,240</div>
+                    <small class="text-success">
+                      <i class="fas fa-arrow-up me-1"></i>5.2% from target
+                    </small>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="p-3 bg-light rounded">
+                    <div class="text-muted">4" Blocks</div>
+                    <div class="production-data" id="blocks4-value">980</div>
+                    <small class="text-danger">
+                      <i class="fas fa-arrow-down me-1"></i>2.8% from target
+                    </small>
+                  </div>
+                </div>
+              </div>
+              <div class="mt-3 d-flex justify-content-between">
+                <button
+                  class="btn btn-outline-primary"
+                  data-bs-toggle="modal"
+                  data-bs-target="#productionModal"
+                >
+                  <i class="fas fa-edit me-2"></i>Update
+                </button>
+                <button class="btn btn-outline-secondary">
+                  <i class="fas fa-chart-line me-2"></i>View Trends
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="orders-card" class="section col-md-6">
+          <div class="card card-custom animate__animated animate__fadeInRight">
+            <div class="card-body">
+              <div
+                class="d-flex justify-content-between align-items-center mb-3"
+              >
+                <h5 class="card-title fw-bold">Orders Status</h5>
+                <i class="fas fa-clipboard-list text-success fs-4"></i>
+              </div>
+              <div class="chart-container">
+                <canvas id="ordersChart"></canvas>
+              </div>
+              <div class="row text-center">
+                <div class="col-4">
+                  <div class="text-muted">Total</div>
+                  <div class="order-count" id="total-orders">58</div>
+                </div>
+                <div class="col-4">
+                  <div class="text-muted">Completed</div>
+                  <div class="order-count text-success" id="completed-orders">
+                    46
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="text-muted">Pending</div>
+                  <div class="order-count text-danger" id="pending-orders">
+                    12
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="financial-card" class="section mt-4">
+        <div class="card card-custom animate__animated animate__fadeInUp">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <div>
+                <h5 class="card-title fw-bold">Financial Overview</h5>
+                <small class="text-muted">Monthly Summary (Admin)</small>
+              </div>
+              <div class="dropdown">
+                <button
+                  class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                  type="button"
+                  id="financialDropdown"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  <i class="fas fa-calendar-alt me-2"></i>Monthly
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="financialDropdown">
+                  <li>
+                    <a class="dropdown-item" href="#" data-timeframe="weekly"
+                      >Weekly</a
+                    >
+                  </li>
+                  <li>
+                    <a
+                      class="dropdown-item active"
+                      href="#"
+                      data-timeframe="monthly"
+                      >Monthly</a
+                    >
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="#" data-timeframe="yearly"
+                      >Yearly</a
+                    >
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="financialChart"></canvas>
+            </div>
+            <div class="row mt-3">
+              <div class="col-md-4">
+                <div class="p-3 bg-light rounded">
+                  <div class="text-muted">Revenue</div>
+                  <div class="financial-amount" id="revenue-value">
+                    ZMW 45,200
+                  </div>
+                  <small class="text-success">
+                    <i class="fas fa-arrow-up me-1"></i>8.3% from last month
+                  </small>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 bg-light rounded">
+                  <div class="text-muted">Expenses</div>
+                  <div class="financial-amount text-danger" id="expenses-value">
+                    ZMW 28,500
+                  </div>
+                  <small class="text-success">
+                    <i class="fas fa-arrow-down me-1"></i>3.7% from last month
+                  </small>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-3 bg-light rounded">
+                  <div class="text-muted">Profit</div>
+                  <div class="financial-amount text-success" id="profit-value">
+                    ZMW 16,700
+                  </div>
+                  <small class="text-success">
+                    <i class="fas fa-arrow-up me-1"></i>15.2% from last month
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="inventory-card" class="section mt-4">
+        <div class="card card-custom animate__animated animate__fadeInUp">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="card-title fw-bold">Inventory Status</h5>
+              <div>
+                <span class="badge bg-warning me-2">
+                  <i class="fas fa-exclamation-circle me-1"></i>Low Stock
+                </span>
+                <i class="fas fa-pallet text-info fs-4"></i>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-3">
+                <div class="p-3 bg-light rounded mb-3">
+                  <div class="d-flex justify-content-between">
+                    <div class="text-muted">Cement</div>
+                    <i
+                      class="fas fa-info-circle text-muted"
+                      data-bs-toggle="tooltip"
+                      title="Last updated: 2 hours ago"
+                    ></i>
+                  </div>
+                  <div class="material-quantity" id="cement-value">
+                    420 Bags
+                  </div>
+                  <div class="progress progress-thin mt-2">
+                    <div
+                      class="progress-bar bg-warning"
+                      id="cement-progress"
+                      style="width: 42%"
+                    ></div>
+                  </div>
+                  <small class="text-danger mt-1 d-block">
+                    <i class="fas fa-exclamation-triangle me-1"></i>Reorder at
+                    500
+                  </small>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="p-3 bg-light rounded mb-3">
+                  <div class="d-flex justify-content-between">
+                    <div class="text-muted">Stone</div>
+                    <i
+                      class="fas fa-info-circle text-muted"
+                      data-bs-toggle="tooltip"
+                      title="Last updated: 4 hours ago"
+                    ></i>
+                  </div>
+                  <div class="material-quantity" id="stone-value">150 Tons</div>
+                  <div class="progress progress-thin mt-2">
+                    <div
+                      class="progress-bar bg-success"
+                      id="stone-progress"
+                      style="width: 30%"
+                    ></div>
+                  </div>
+                  <small class="text-success mt-1 d-block">
+                    <i class="fas fa-check-circle me-1"></i>Stock level OK
+                  </small>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="p-3 bg-light rounded mb-3">
+                  <div class="d-flex justify-content-between">
+                    <div class="text-muted">Diesel</div>
+                    <i
+                      class="fas fa-info-circle text-muted"
+                      data-bs-toggle="tooltip"
+                      title="Last updated: 1 hour ago"
+                    ></i>
+                  </div>
+                  <div class="material-quantity" id="diesel-value">
+                    800 Litres
+                  </div>
+                  <div class="progress progress-thin mt-2">
+                    <div
+                      class="progress-bar bg-danger"
+                      id="diesel-progress"
+                      style="width: 40%"
+                    ></div>
+                  </div>
+                  <small class="text-warning mt-1 d-block">
+                    <i class="fas fa-clock me-1"></i>Delivery scheduled
+                  </small>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="p-3 bg-light rounded mb-3">
+                  <div class="d-flex justify-content-between">
+                    <div class="text-muted">Sand</div>
+                    <i
+                      class="fas fa-info-circle text-muted"
+                      data-bs-toggle="tooltip"
+                      title="Last updated: 6 hours ago"
+                    ></i>
+                  </div>
+                  <div class="material-quantity" id="sand-value">320 Tons</div>
+                  <div class="progress progress-thin mt-2">
+                    <div
+                      class="progress-bar bg-info"
+                      id="sand-progress"
+                      style="width: 64%"
+                    ></div>
+                  </div>
+                  <small class="text-success mt-1 d-block">
+                    <i class="fas fa-check-circle me-1"></i>Stock level OK
+                  </small>
+                </div>
+              </div>
+            </div>
+            <div class="d-flex justify-content-between">
+              <button
+                class="btn btn-outline-info"
+                data-bs-toggle="modal"
+                data-bs-target="#inventoryModal"
+              >
+                <i class="fas fa-edit me-2"></i>Manage Inventory
+              </button>
+              <button class="btn btn-outline-primary">
+                <i class="fas fa-truck me-2"></i>Order Supplies
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div id="activity-card" class="section mt-4">
+        <div class="card card-custom animate__animated animate__fadeInUp">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="card-title fw-bold">Recent Activity</h5>
+              <i class="fas fa-history text-secondary fs-4"></i>
+            </div>
+            <div class="list-group list-group-flush">
+              <div class="list-group-item border-0 px-0 py-3">
+                <div class="d-flex align-items-center">
+                  <div class="me-3">
+                    <div class="bg-primary bg-opacity-10 p-2 rounded-circle">
+                      <i class="fas fa-industry text-primary"></i>
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between">
+                      <h6 class="mb-1">Production Update</h6>
+                      <small class="text-muted">10 mins ago</small>
+                    </div>
+                    <p class="mb-0 text-muted">
+                      1,240 units of 6" blocks added to inventory
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="list-group-item border-0 px-0 py-3">
+                <div class="d-flex align-items-center">
+                  <div class="me-3">
+                    <div class="bg-success bg-opacity-10 p-2 rounded-circle">
+                      <i class="fas fa-truck text-success"></i>
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between">
+                      <h6 class="mb-1">Delivery Completed</h6>
+                      <small class="text-muted">1 hour ago</small>
+                    </div>
+                    <p class="mb-0 text-muted">
+                      Order #ZB-2023-056 delivered to Lusaka site
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="list-group-item border-0 px-0 py-3">
+                <div class="d-flex align-items-center">
+                  <div class="me-3">
+                    <div class="bg-warning bg-opacity-10 p-2 rounded-circle">
+                      <i class="fas fa-exclamation-triangle text-warning"></i>
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between">
+                      <h6 class="mb-1">Low Inventory Alert</h6>
+                      <small class="text-muted">2 hours ago</small>
+                    </div>
+                    <p class="mb-0 text-muted">
+                      Cement stock below reorder level (420/1000 bags)
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div class="list-group-item border-0 px-0 py-3">
+                <div class="d-flex align-items-center">
+                  <div class="me-3">
+                    <div class="bg-info bg-opacity-10 p-2 rounded-circle">
+                      <i class="fas fa-file-invoice text-info"></i>
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between">
+                      <h6 class="mb-1">New Invoice</h6>
+                      <small class="text-muted">4 hours ago</small>
+                    </div>
+                    <p class="mb-0 text-muted">
+                      Invoice #INV-2023-124 created for ABC Construction
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="text-center mt-3">
+              <a href="#" class="text-primary text-decoration-none">
+                <i class="fas fa-arrow-down me-2"></i>View All Activities
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer
+      class="custom-header-footer fixed-bottom animate__animated animate__fadeInUp"
+    >
+      <div class="container h-100">
+        <div
+          class="d-flex justify-content-around align-items-center h-100 px-4"
+        >
+          <div
+            class="nav-icon active-nav"
+            data-section="home"
+            role="button"
+            tabindex="0"
+            aria-label="Navigate to Home"
+          >
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+          </div>
+          <div
+            class="nav-icon"
+            data-section="orders"
+            role="button"
+            tabindex="0"
+            aria-label="Navigate to Orders"
+          >
+            <i class="fas fa-clipboard-list"></i>
+            <span>Orders</span>
+          </div>
+          <div
+            class="nav-icon"
+            data-section="stock"
+            role="button"
+            tabindex="0"
+            aria-label="Navigate to Stock"
+          >
+            <i class="fas fa-warehouse"></i>
+            <span>Stock</span>
+          </div>
+          <div
+            class="nav-icon"
+            data-section="reports"
+            role="button"
+            tabindex="0"
+            aria-label="Navigate to Reports"
+          >
+            <i class="fas fa-chart-pie"></i>
+            <span>Reports</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Initialize tooltips
+      document.addEventListener("DOMContentLoaded", function () {
+        var tooltipTriggerList = [].slice.call(
+          document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        );
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+      });
+
+      // Initialize toast
+      const toastLiveExample = document.getElementById("quickActionsMenu");
+      const toast = new bootstrap.Toast(toastLiveExample);
+
+      // Floating action button click handler
+      document
+        .getElementById("quickActionBtn")
+        .addEventListener("click", function () {
+          toast.show();
+        });
+
+      // Chart Data
+      const chartData = {
+        weekly: {
+          orders: [10, 2],
+          financial: {
+            labels: ["W1", "W2", "W3", "W4"],
+            revenue: [8000, 8500, 9000, 9200],
+            expenses: [6000, 6200, 6500, 6700],
+          },
+        },
+        monthly: {
+          orders: [46, 12],
+          financial: {
+            labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+            revenue: [32000, 45000, 38000, 41000, 45200, 48000],
+            expenses: [28000, 32000, 29500, 31000, 28500, 30000],
+          },
+        },
+        yearly: {
+          orders: [550, 100],
+          financial: {
+            labels: ["2019", "2020", "2021", "2022"],
+            revenue: [380000, 420000, 450000, 480000],
+            expenses: [320000, 350000, 370000, 390000],
+          },
+        },
+      };
+
+      // Initialize Charts
+      let ordersChart, financialChart;
+      const ordersCtx = document.getElementById("ordersChart").getContext("2d");
+      ordersChart = new Chart(ordersCtx, {
+        type: "doughnut",
+        data: {
+          labels: ["Completed", "Pending"],
+          datasets: [
+            {
+              data: chartData.monthly.orders,
+              backgroundColor: ["#2ecc71", "#e74c3c"],
+              borderWidth: 0,
+            },
+          ],
+        },
+        options: {
+          cutout: "70%",
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                boxWidth: 12,
+                padding: 20,
+                usePointStyle: true,
+                pointStyle: "circle",
+              },
+            },
+          },
+        },
+      });
+
+      const financialCtx = document
+        .getElementById("financialChart")
+        .getContext("2d");
+      financialChart = new Chart(financialCtx, {
+        type: "line",
+        data: {
+          labels: chartData.monthly.financial.labels,
+          datasets: [
+            {
+              label: "Revenue",
+              data: chartData.monthly.financial.revenue,
+              borderColor: "#2ecc71",
+              backgroundColor: "rgba(46, 204, 113, 0.1)",
+              tension: 0.4,
+              fill: true,
+              borderWidth: 2,
+            },
+            {
+              label: "Expenses",
+              data: chartData.monthly.financial.expenses,
+              borderColor: "#e74c3c",
+              backgroundColor: "rgba(231, 76, 60, 0.1)",
+              tension: 0.4,
+              fill: true,
+              borderWidth: 2,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: "top",
+              labels: {
+                boxWidth: 12,
+                usePointStyle: true,
+                pointStyle: "circle",
+              },
+            },
+            tooltip: {
+              mode: "index",
+              intersect: false,
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              grid: {
+                drawBorder: false,
+              },
+            },
+            x: {
+              grid: {
+                display: false,
+              },
+            },
+          },
+        },
+      });
+
+      // Function to update charts
+      function updateCharts(timeframe) {
+        const data = chartData[timeframe];
+        ordersChart.data.datasets[0].data = data.orders;
+        ordersChart.update();
+        financialChart.data.labels = data.financial.labels;
+        financialChart.data.datasets[0].data = data.financial.revenue;
+        financialChart.data.datasets[1].data = data.financial.expenses;
+        financialChart.update();
+      }
+
+      // Event listener for chart timeframe dropdown
+      document.querySelectorAll("[data-timeframe]").forEach((item) => {
+        item.addEventListener("click", function (e) {
+          e.preventDefault();
+          const timeframe = this.getAttribute("data-timeframe");
+          updateCharts(timeframe);
+          document.getElementById("chartTimeframe").value = timeframe;
+
+          // Update dropdown text
+          const dropdownBtn = document.getElementById("financialDropdown");
+          if (timeframe === "weekly") {
+            dropdownBtn.innerHTML =
+              '<i class="fas fa-calendar-alt me-2"></i>Weekly';
+          } else if (timeframe === "monthly") {
+            dropdownBtn.innerHTML =
+              '<i class="fas fa-calendar-alt me-2"></i>Monthly';
+          } else {
+            dropdownBtn.innerHTML =
+              '<i class="fas fa-calendar-alt me-2"></i>Yearly';
+          }
+
+          // Update active class
+          document
+            .querySelectorAll("[data-timeframe]")
+            .forEach((el) => el.classList.remove("active"));
+          this.classList.add("active");
+        });
+      });
+
+      // Event listener for chart timeframe in profile modal
+      document
+        .getElementById("chartTimeframe")
+        .addEventListener("change", function () {
+          const timeframe = this.value;
+          updateCharts(timeframe);
+        });
+
+      // Function to show section
+      function showSection(section) {
+        const sections = document.querySelectorAll(".section");
+        sections.forEach((sec) => (sec.style.display = "none"));
+        if (section === "home") {
+          sections.forEach((sec) => (sec.style.display = "block"));
+        } else {
+          document.getElementById(`${section}-card`).style.display = "block";
+        }
+      }
+
+      // Event listeners for nav-icons
+      document.querySelectorAll(".nav-icon").forEach((icon) => {
+        icon.addEventListener("click", function () {
+          document.querySelector(".active-nav").classList.remove("active-nav");
+          this.classList.add("active-nav");
+          const section = this.getAttribute("data-section");
+          showSection(section);
+        });
+      });
+
+      // Event listeners for sidebar links
+      document.querySelectorAll("#sidebarMenu a").forEach((link) => {
+        link.addEventListener("click", function (e) {
+          e.preventDefault();
+          const section = this.getAttribute("data-section");
+          showSection(section);
+          const offcanvas = bootstrap.Offcanvas.getInstance(
+            document.getElementById("sidebarMenu")
+          );
+          offcanvas.hide();
+          document
+            .querySelectorAll(".nav-icon")
+            .forEach((icon) => icon.classList.remove("active-nav"));
+          document
+            .querySelector(`.nav-icon[data-section="${section}"]`)
+            .classList.add("active-nav");
+        });
+      });
+
+      // Update data function
+      function updateData() {
+        // Update production
+        let blocks6 =
+          parseInt(
+            document
+              .getElementById("blocks6-value")
+              .textContent.replace(/,/g, "")
+          ) + Math.floor(Math.random() * 10 - 5);
+        let blocks4 =
+          parseInt(
+            document
+              .getElementById("blocks4-value")
+              .textContent.replace(/,/g, "")
+          ) + Math.floor(Math.random() * 10 - 5);
+        document.getElementById("blocks6-value").textContent = Math.max(
+          blocks6,
+          0
+        ).toLocaleString();
+        document.getElementById("blocks4-value").textContent = Math.max(
+          blocks4,
+          0
+        ).toLocaleString();
+
+        // Update orders
+        let totalOrders =
+          parseInt(document.getElementById("total-orders").textContent) +
+          Math.floor(Math.random() * 5 - 2);
+        let pendingOrders =
+          parseInt(document.getElementById("pending-orders").textContent) +
+          Math.floor(Math.random() * 3 - 1);
+        document.getElementById("total-orders").textContent = Math.max(
+          totalOrders,
+          0
+        );
+        document.getElementById("pending-orders").textContent = Math.max(
+          pendingOrders,
+          0
+        );
+        document.getElementById("completed-orders").textContent = Math.max(
+          totalOrders - pendingOrders,
+          0
+        );
+        ordersChart.data.datasets[0].data = [
+          totalOrders - pendingOrders,
+          pendingOrders,
+        ];
+        ordersChart.update();
+
+        // Update financials
+        let revenue =
+          parseInt(
+            document
+              .getElementById("revenue-value")
+              .textContent.replace("ZMW ", "")
+              .replace(/,/g, "")
+          ) + Math.floor(Math.random() * 1000 - 500);
+        let expenses =
+          parseInt(
+            document
+              .getElementById("expenses-value")
+              .textContent.replace("ZMW ", "")
+              .replace(/,/g, "")
+          ) + Math.floor(Math.random() * 500 - 250);
+        let profit = revenue - expenses;
+        document.getElementById(
+          "revenue-value"
+        ).textContent = `ZMW ${revenue.toLocaleString()}`;
+        document.getElementById(
+          "expenses-value"
+        ).textContent = `ZMW ${expenses.toLocaleString()}`;
+        document.getElementById(
+          "profit-value"
+        ).textContent = `ZMW ${profit.toLocaleString()}`;
+        financialChart.data.datasets[0].data[
+          financialChart.data.datasets[0].data.length - 1
+        ] = revenue;
+        financialChart.data.datasets[1].data[
+          financialChart.data.datasets[1].data.length - 1
+        ] = expenses;
+        financialChart.update();
+
+        // Update inventory
+        let cement =
+          parseInt(
+            document.getElementById("cement-value").textContent.split(" ")[0]
+          ) + Math.floor(Math.random() * 20 - 10);
+        let stone =
+          parseInt(
+            document.getElementById("stone-value").textContent.split(" ")[0]
+          ) + Math.floor(Math.random() * 10 - 5);
+        let diesel =
+          parseInt(
+            document.getElementById("diesel-value").textContent.split(" ")[0]
+          ) + Math.floor(Math.random() * 50 - 25);
+        let sand =
+          parseInt(
+            document.getElementById("sand-value").textContent.split(" ")[0]
+          ) + Math.floor(Math.random() * 30 - 15);
+        document.getElementById("cement-value").textContent = `${Math.max(
+          cement,
+          0
+        )} Bags`;
+        document.getElementById("stone-value").textContent = `${Math.max(
+          stone,
+          0
+        )} Tons`;
+        document.getElementById("diesel-value").textContent = `${Math.max(
+          diesel,
+          0
+        )} Litres`;
+        document.getElementById("sand-value").textContent = `${Math.max(
+          sand,
+          0
+        )} Tons`;
+        const cementMax = 1000;
+        const stoneMax = 500;
+        const dieselMax = 2000;
+        const sandMax = 500;
+        document.getElementById("cement-progress").style.width = `${(
+          (cement / cementMax) *
+          100
+        ).toFixed(2)}%`;
+        document.getElementById("stone-progress").style.width = `${(
+          (stone / stoneMax) *
+          100
+        ).toFixed(2)}%`;
+        document.getElementById("diesel-progress").style.width = `${(
+          (diesel / dieselMax) *
+          100
+        ).toFixed(2)}%`;
+        document.getElementById("sand-progress").style.width = `${(
+          (sand / sandMax) *
+          100
+        ).toFixed(2)}%`;
+      }
+
+      // Set interval to update data every 5 seconds
+      setInterval(updateData, 5000);
+
+      // Save production
+      document
+        .getElementById("saveProduction")
+        .addEventListener("click", function () {
+          const blocks6 = document.getElementById("blocks6").value;
+          const blocks4 = document.getElementById("blocks4").value;
+          if (blocks6 < 0 || blocks4 < 0) {
+            document.getElementById("productionError").style.display = "block";
+            return;
+          }
+          const btn = this;
+          btn.innerHTML =
+            '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+          btn.disabled = true;
+
+          setTimeout(() => {
+            document.getElementById("blocks6-value").textContent = blocks6
+              ? parseInt(blocks6).toLocaleString()
+              : document.getElementById("blocks6-value").textContent;
+            document.getElementById("blocks4-value").textContent = blocks4
+              ? parseInt(blocks4).toLocaleString()
+              : document.getElementById("blocks4-value").textContent;
+            btn.innerHTML = '<i class="fas fa-save me-2"></i>Save changes';
+            btn.disabled = false;
+            document.getElementById("productionError").style.display = "none";
+
+            // Show success toast
+            const toastEl = document.createElement("div");
+            toastEl.className = "toast show position-fixed top-0 end-0 m-3";
+            toastEl.style.zIndex = "1100";
+            toastEl.innerHTML = `
+              <div class="toast-header bg-success text-white">
+                <strong class="me-auto">Success</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+              </div>
+              <div class="toast-body">
+                Production data updated successfully!
+              </div>
+            `;
+            document.body.appendChild(toastEl);
+
+            setTimeout(() => {
+              toastEl.classList.remove("show");
+              setTimeout(() => toastEl.remove(), 300);
+            }, 3000);
+
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(
+              document.getElementById("productionModal")
+            );
+            modal.hide();
+          }, 1000);
+        });
+
+      // Save inventory
+      document
+        .getElementById("saveInventory")
+        .addEventListener("click", function () {
+          const cement = document.getElementById("cement").value;
+          const stone = document.getElementById("stone").value;
+          const diesel = document.getElementById("diesel").value;
+          const sand = document.getElementById("sand").value;
+          if (cement < 0 || stone < 0 || diesel < 0 || sand < 0) {
+            document.getElementById("inventoryError").style.display = "block";
+            return;
+          }
+          const btn = this;
+          btn.innerHTML =
+            '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+          btn.disabled = true;
+
+          setTimeout(() => {
+            document.getElementById("cement-value").textContent = `${
+              cement ||
+              document.getElementById("cement-value").textContent.split(" ")[0]
+            } Bags`;
+            document.getElementById("stone-value").textContent = `${
+              stone ||
+              document.getElementById("stone-value").textContent.split(" ")[0]
+            } Tons`;
+            document.getElementById("diesel-value").textContent = `${
+              diesel ||
+              document.getElementById("diesel-value").textContent.split(" ")[0]
+            } Litres`;
+            document.getElementById("sand-value").textContent = `${
+              sand ||
+              document.getElementById("sand-value").textContent.split(" ")[0]
+            } Tons`;
+            btn.innerHTML = '<i class="fas fa-save me-2"></i>Save changes';
+            btn.disabled = false;
+            document.getElementById("inventoryError").style.display = "none";
+
+            // Show success toast
+            const toastEl = document.createElement("div");
+            toastEl.className = "toast show position-fixed top-0 end-0 m-3";
+            toastEl.style.zIndex = "1100";
+            toastEl.innerHTML = `
+              <div class="toast-header bg-success text-white">
+                <strong class="me-auto">Success</strong>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+              </div>
+              <div class="toast-body">
+                Inventory data updated successfully!
+              </div>
+            `;
+            document.body.appendChild(toastEl);
+
+            setTimeout(() => {
+              toastEl.classList.remove("show");
+              setTimeout(() => toastEl.remove(), 300);
+            }, 3000);
+
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(
+              document.getElementById("inventoryModal")
+            );
+            modal.hide();
+          }, 1000);
+        });
+
+      // Save settings
+      document
+        .getElementById("saveSettings")
+        .addEventListener("click", function () {
+          const showProduction =
+            document.getElementById("showProduction").checked;
+          const showOrders = document.getElementById("showOrders").checked;
+          const showFinancials =
+            document.getElementById("showFinancials").checked;
+          const showInventory =
+            document.getElementById("showInventory").checked;
+          document.getElementById("production-card").style.display =
+            showProduction ? "block" : "none";
+          document.getElementById("orders-card").style.display = showOrders
+            ? "block"
+            : "none";
+          document.getElementById("financial-card").style.display =
+            showFinancials ? "block" : "none";
+          document.getElementById("inventory-card").style.display =
+            showInventory ? "block" : "none";
+          document.getElementById("activity-card").style.display = "block"; // Always show activity card
+
+          // Show success toast
+          const toastEl = document.createElement("div");
+          toastEl.className = "toast show position-fixed top-0 end-0 m-3";
+          toastEl.style.zIndex = "1100";
+          toastEl.innerHTML = `
+            <div class="toast-header bg-success text-white">
+              <strong class="me-auto">Success</strong>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+              </div>
+              <div class="toast-body">
+                Settings saved successfully!
+              </div>
+            `;
+          document.body.appendChild(toastEl);
+
+          setTimeout(() => {
+            toastEl.classList.remove("show");
+            setTimeout(() => toastEl.remove(), 300);
+          }, 3000);
+
+          // Close modal
+          const modal = bootstrap.Modal.getInstance(
+            document.getElementById("profileModal")
+          );
+          modal.hide();
+        });
+
+      // Reset form when modal is hidden
+      document
+        .getElementById("productionModal")
+        .addEventListener("hidden.bs.modal", function () {
+          document.getElementById("productionForm").reset();
+          document.getElementById("productionError").style.display = "none";
+        });
+
+      document
+        .getElementById("inventoryModal")
+        .addEventListener("hidden.bs.modal", function () {
+          document.getElementById("inventoryForm").reset();
+          document.getElementById("inventoryError").style.display = "none";
+        });
+
+      // Add animation to cards on scroll
+      document.addEventListener("DOMContentLoaded", function () {
+        const animateOnScroll = function () {
+          const cards = document.querySelectorAll(".card-custom");
+          cards.forEach((card) => {
+            const cardPosition = card.getBoundingClientRect().top;
+            const screenPosition = window.innerHeight / 1.3;
+
+            if (cardPosition < screenPosition) {
+              card.classList.add("animate__fadeInUp");
+            }
+          });
+        };
+
+        window.addEventListener("scroll", animateOnScroll);
+        animateOnScroll(); // Run once on load
+      });
+    </script>
+  </body>
+</html>

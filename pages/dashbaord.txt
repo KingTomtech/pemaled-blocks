@@ -1,0 +1,364 @@
+<?php
+try {
+    // Fetch Today's Production
+    $today = date('Y-m-d');
+    $stmt = $conn->prepare("
+        SELECT 
+            COALESCE(SUM(CASE WHEN block_type_id = 1 THEN blocks_produced ELSE 0 END), 0) as blocks6,
+            COALESCE(SUM(CASE WHEN block_type_id = 2 THEN blocks_produced ELSE 0 END), 0) as blocks4
+        FROM daily_production 
+        WHERE date = :today
+    ");
+    $stmt->execute([':today' => $today]);
+    $production = $stmt->fetch(PDO::FETCH_ASSOC);
+    $blocks6 = $production['blocks6'] ?? 0;
+    $blocks4 = $production['blocks4'] ?? 0;
+
+    // Fetch Orders Status
+    $stmt = $conn->prepare("
+        SELECT 
+            COUNT(*) as total_orders,
+            SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) as pending_orders
+        FROM clients_orders 
+        WHERE order_date = :today
+    ");
+    $stmt->execute([':today' => $today]);
+    $orders = $stmt->fetch(PDO::FETCH_ASSOC);
+    $total_orders = $orders['total_orders'] ?? 0;
+    $pending_orders = $orders['pending_orders'] ?? 0;
+
+    // Fetch Financial Overview
+    $current_month = date('Y-m');
+    $stmt = $conn->prepare("
+        SELECT 
+            COALESCE(SUM(CASE WHEN type = 'Income' THEN amount ELSE 0 END), 0) as revenue,
+            COALESCE(SUM(CASE WHEN type = 'Expense' THEN amount ELSE 0 END), 0) as expenses
+        FROM transactions 
+        WHERE DATE_FORMAT(date, '%Y-%m') = :month
+    ");
+    $stmt->execute([':month' => $current_month]);
+    $financials = $stmt->fetch(PDO::FETCH_ASSOC);
+    $revenue = $financials['revenue'] ?? 0;
+    $expenses = $financials['expenses'] ?? 0;
+    $profit = $revenue - $expenses;
+
+    // Fetch Inventory Status
+    $stmt = $conn->prepare("
+        SELECT 
+            MAX(CASE WHEN material_name = 'Cement' THEN quantity_remaining END) as cement,
+            MAX(CASE WHEN material_name = 'Stone' THEN quantity_remaining END) as stone,
+            MAX(CASE WHEN material_name = 'Diesel' THEN quantity_remaining END) as diesel
+        FROM materials
+    ");
+    $stmt->execute();
+    $inventory = $stmt->fetch(PDO::FETCH_ASSOC);
+    $cement = $inventory['cement'] ?? 0;
+    $stone = $inventory['stone'] ?? 0;
+    $diesel = $inventory['diesel'] ?? 0;
+
+    // Orders Chart Data
+    $ordersChartData = ['labels' => [], 'data' => []];
+    for ($i = 6; $i >= 0; $i--) {
+        $date = date('Y-m-d', strtotime("-$i days"));
+        $stmt = $conn->prepare("
+            SELECT COUNT(*) as total 
+            FROM clients_orders 
+            WHERE order_date = :date
+        ");
+        $stmt->execute([':date' => $date]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $ordersChartData['labels'][] = date('D', strtotime($date));
+        $ordersChartData['data'][] = $row['total'] ?? 0;
+    }
+    $orders_chart_json = json_encode($ordersChartData);
+
+    // Financial Chart Data
+    $financialData = ['labels' => [], 'revenue' => [], 'expenses' => []];
+    for ($i = 11; $i >= 0; $i--) {
+        $month = date('Y-m', strtotime("-$i months"));
+        $stmt = $conn->prepare("
+            SELECT 
+                COALESCE(SUM(CASE WHEN type = 'Income' THEN amount END), 0) as revenue,
+                COALESCE(SUM(CASE WHEN type = 'Expense' THEN amount END), 0) as expenses
+            FROM transactions
+            WHERE DATE_FORMAT(date, '%Y-%m') = :month
+        ");
+        $stmt->execute([':month' => $month]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        $financialData['labels'][] = date('M Y', strtotime($month));
+        $financialData['revenue'][] = $row['revenue'] ?? 0;
+        $financialData['expenses'][] = $row['expenses'] ?? 0;
+    }
+    $financial_json = json_encode($financialData);
+
+} catch (PDOException $e) {
+    // Handle database errors
+    error_log("Database error: " . $e->getMessage());
+    die("An error occurred while fetching dashboard data");
+}
+?>
+<main class="container main-content">
+
+
+    <div class="row g-4">
+        <div id="production-card" class="section col-md-6">
+            <div class="card card-custom">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title fw-bold">Today's Production</h5>
+                        <i class="fas fa-industry text-primary fs-4"></i>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded">
+                                <div class="text-muted">6" Blocks</div>
+                                <div class="production-data" id="blocks6-value"><?php echo $blocks6; ?></div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded">
+                                <div class="text-muted">4" Blocks</div>
+                                <div class="production-data" id="blocks4-value"><?php echo $blocks4; ?></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary w-100 mt-3" data-bs-toggle="modal" data-bs-target="#productionModal">
+                        Update Production
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div id="inventory-card" class="section mt-4">
+        <div class="card card-custom">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title fw-bold">Inventory Status</h5>
+                    <i class="fas fa-pallet text-info fs-4"></i>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded mb-3">
+                            <div class="text-muted">Cement</div>
+                            <div class="material-quantity" id="cement-value"><?php echo $cement; ?> Bags</div>
+                            <div class="progress mt-2" style="height: 5px">
+                                <div class="progress-bar bg-warning" id="cement-progress" style="width: <?php echo min($cement / 100 * 100, 100); ?>%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded mb-3">
+                            <div class="text-muted">Stone</div>
+                            <div class="material-quantity" id="stone-value"><?php echo $stone; ?> Tons</div>
+                            <div class="progress mt-2" style="height: 5px">
+                                <div class="progress-bar bg-success" id="stone-progress" style="width: <?php echo min($stone / 50 * 100, 100); ?>%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded mb-3">
+                            <div class="text-muted">Diesel</div>
+                            <div class="material-quantity" id="diesel-value"><?php echo $diesel; ?> Litres</div>
+                            <div class="progress mt-2" style="height: 5px">
+                                <div class="progress-bar bg-danger" id="diesel-progress" style="width: <?php echo min($diesel / 100 * 100, 100); ?>%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-info w-100" data-bs-toggle="modal" data-bs-target="#inventoryModal">
+                    Manage Inventory
+                </button>
+
+
+        <div class="row mb-4">
+        <!-- Quick Actions -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Manager Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <a href="index.php?page=orders" class="btn btn-primary w-100">
+                                <i class="fas fa-truck-loading mr-2"></i> Record Collections
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <a href="index.php?page=materials" class="btn btn-warning w-100">
+                                <i class="fas fa-boxes mr-2"></i> Stock Materials
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <a href="index.php?page=attendance" class="btn btn-info w-100">
+                                <i class="fas fa-clipboard-check mr-2"></i> Staff Attendance
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <a href="index.php?page=production_report" class="btn btn-success w-100">
+                                <i class="fas fa-chart-line mr-2"></i> Production Report
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+         <!-- Staff Attendance -->
+         <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        Today's Attendance (<?= $attendanceData['present_today'] ?? 0 ?>/<?= $attendanceData['total_workers'] ?? 0 ?>)
+                    </h6>
+                    <a href="index.php?page=attendance" class="btn btn-sm btn-primary">Manage</a>
+                </div>
+                <div class="card-body">
+                        <a href="index.php?page=payroll" class="btn btn-success w-100">
+                            <i class="fas fa-money-bill-wave mr-2"></i> Process Weekly Payroll
+                        </a>
+                        <p class="mb-0">Next Payroll: <?= date('l, F j', strtotime('next monday')) ?></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <!-- Recent Orders -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Orders</h6>
+                    <a href="index.php?page=orders" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Client</th>
+                                    <th>Type</th>
+                                    <th>Qty</th>
+                                    <th>Collected</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $recentOrders = $conn->query("
+                                    SELECT o.*, bt.type_name, 
+                                        (SELECT SUM(blocks_collected) FROM client_collections 
+                                         WHERE order_id = o.id) AS collected
+                                    FROM clients_orders o
+                                    JOIN block_types bt ON o.block_type_id = bt.id
+                                    ORDER BY o.order_date DESC LIMIT 5
+                                ");
+                                
+                                while ($order = $recentOrders->fetch(PDO::FETCH_ASSOC)):
+                                ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($order['client_name']) ?></td>
+                                    <td><?= $order['type_name'] ?></td>
+                                    <td><?= $order['quantity'] ?></td>
+                                    <td><?= $order['collected'] ?? 0 ?></td>
+                                    <td>
+                                        <span class="badge bg-<?= 
+                                            ($order['status'] == 'Completed') ? 'success' : 
+                                            (($order['status'] == 'Pending') ? 'warning' : 'danger') ?>">
+                                            <?= $order['status'] ?>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Collections -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Collections</h6>
+                    <a href="index.php?page=orders" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Client</th>
+                                    <th>Blocks</th>
+                                   
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $recentCollections = $conn->query("
+                                    SELECT c.*, o.client_name, bt.type_name, bt.unit_price
+                                    FROM client_collections c
+                                    JOIN clients_orders o ON c.order_id = o.id
+                                    JOIN block_types bt ON o.block_type_id = bt.id
+                                    ORDER BY c.date DESC LIMIT 5
+                                ");
+                                
+                                while ($collection = $recentCollections->fetch(PDO::FETCH_ASSOC)):
+                                ?>
+                                <tr>
+                                    <td><?= date('m/d', strtotime($collection['date'])) ?></td>
+                                    <td><?= htmlspecialchars($collection['client_name']) ?></td>
+                                    <td><?= $collection['blocks_collected'] ?></td>
+                                    
+                                </tr>
+                                <?php endwhile; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+        <div id="orders-card" class="section col-md-6">
+            <div class="card card-custom">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title fw-bold">Orders Status</h5>
+                        <i class="fas fa-clipboard-list text-success fs-4"></i>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="ordersChart"></canvas>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="text-muted">Total</div>
+                            <div class="order-count" id="total-orders"><?php echo $total_orders; ?></div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-muted">Pending</div>
+                            <div class="order-count text-danger" id="pending-orders"><?php echo $pending_orders; ?></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+               </div>
+        </div>
+    </div>
+</main>
+
+<script>
+var ordersChartData = <?php echo $orders_chart_json; ?>;
+var financialData = <?php echo $financial_json; ?>;
+</script>
+
+<?php include 'includes/footer.php'; ?>
